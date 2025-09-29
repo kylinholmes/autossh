@@ -25,11 +25,7 @@ jobs:
       - name: Update configure.ac
         run: |
           autoupdate
-
-      - name: Install additional dependencies
-        run: |
-          apk add --no-cache libc-dev g++
-
+      
       - name: Configure and build autossh
         run: |
           autoreconf -i
