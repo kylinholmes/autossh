@@ -12,15 +12,16 @@ jobs:
   build:
     name: Build autossh with musl
     runs-on: ubuntu-latest
+    container:
+      image: alpine:latest
 
     steps:
+      - name: Install dependencies
+        run: |
+          apk add --no-cache musl-dev gcc make autoconf automake libtool
+
       - name: Checkout code
         uses: actions/checkout@v3
-
-      - name: Set up musl environment
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y musl-tools build-essential
 
       - name: Configure and build autossh
         run: |
@@ -32,10 +33,15 @@ jobs:
             --enable-static
           make
 
+      - name: Debug build output
+        run: |
+          echo "Listing all files in the workspace:"
+          find . -type f
+
       - name: Archive the binary
         run: |
           mkdir -p release
-          cp src/autossh release/autossh-static
+          cp autossh release/autossh-static || echo "autossh binary not found! Check the build output above."
         shell: bash
 
       - name: Upload artifact
