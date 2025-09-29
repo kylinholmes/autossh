@@ -1,0 +1,67 @@
+name: Build and Release autossh
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *' # 每天检查一次更新
+
+jobs:
+  build:
+    name: Build autossh with musl
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up musl environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools build-essential
+
+      - name: Configure and build autossh
+        run: |
+          autoreconf -i
+          CC=musl-gcc CFLAGS="-static -Os" LDFLAGS="-static" ./configure --prefix=/usr/local/autossh-musl \
+            --host=x86_64-linux-musl \
+            --build=x86_64-linux-musl \
+            --disable-shared \
+            --enable-static
+          make
+
+      - name: Archive the binary
+        run: |
+          mkdir -p release
+          cp src/autossh release/autossh-static
+        shell: bash
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: autossh-static
+          path: release/autossh-static
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: autossh-static
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: autossh-static
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: v${{ github.run_number }}
+          name: Release v${{ github.run_number }}
+          body: |
+            This release contains the statically built autossh binary.
+          draft: false
+          prerelease: false
