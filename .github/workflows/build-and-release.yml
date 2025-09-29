@@ -23,6 +23,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Update configure.ac
+        run: |
+          autoupdate
+
+      - name: Install additional dependencies
+        run: |
+          apk add --no-cache libc-dev g++
+
       - name: Configure and build autossh
         run: |
           autoreconf -i
@@ -37,6 +45,15 @@ jobs:
         run: |
           echo "Listing all files in the workspace:"
           find . -type f
+
+      - name: Debug config.log
+        run: |
+          if [ -f config.log ]; then
+            echo "Contents of config.log:";
+            cat config.log;
+          else
+            echo "config.log not found!";
+          fi
 
       - name: Archive the binary
         run: |
