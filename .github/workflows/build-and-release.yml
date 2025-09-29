@@ -12,17 +12,16 @@ jobs:
   build:
     name: Build autossh with musl
     runs-on: ubuntu-latest
-    container:
-      image: alpine:latest
 
     steps:
-      - name: Install dependencies
-        run: |
-          apk add --no-cache musl-dev gcc make autoconf automake libtool
-
       - name: Checkout code
         uses: actions/checkout@v3
-
+      
+      - name: Set up musl environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools build-essential
+      
       - name: Update configure.ac
         run: |
           autoupdate
